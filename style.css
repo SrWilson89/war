@@ -1,0 +1,186 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.game-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.status-message {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 15px 0;
+    min-height: 30px;
+    color: #2c3e50;
+}
+
+.piles-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.pile {
+    width: 80px;
+    height: 120px;
+    margin: 10px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.3s;
+}
+
+.pile:hover {
+    transform: translateY(-5px);
+}
+
+.pile.selected {
+    box-shadow: 0 0 15px gold;
+}
+
+.card-back, .card-front {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+}
+
+.card-back {
+    background: linear-gradient(135deg, #1e5799 0%,#207cca 100%);
+    border: 2px solid #0d47a1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+}
+
+.card-front {
+    background-color: white;
+    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transform: rotateY(180deg);
+}
+
+.battle-area {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.player-area, .pc-area {
+    flex: 1;
+    text-align: center;
+}
+
+.vs {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 20px;
+}
+
+.card-slot {
+    width: 100px;
+    height: 150px;
+    margin: 15px auto;
+    perspective: 1000px;
+}
+
+.card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.counter {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1a252f;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .piles-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .battle-area {
+        flex-direction: column;
+    }
+    
+    .vs {
+        margin: 20px 0;
+    }
+}
+
+/* Estilos para las cartas */
+.card-value {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.card-suit {
+    font-size: 1.5em;
+}
+
+.card-suit.oros {
+    color: gold;
+}
+
+.card-suit.copas {
+    color: red;
+}
+
+.card-suit.espadas {
+    color: black;
+}
+
+.card-suit.bastos {
+    color: green;
+}

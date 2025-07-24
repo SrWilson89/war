@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guerra - Baraja Española</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Guerra - Baraja Española</h1>
+        
+        <div class="status-message" id="statusMessage">Elige un montón para comenzar</div>
+        
+        <div class="piles-container" id="pilesContainer">
+            <!-- Los 5 montones se generarán dinámicamente -->
+        </div>
+        
+        <div class="battle-area">
+            <div class="player-area">
+                <h2>Jugador</h2>
+                <div class="card-slot" id="playerCard">
+                    <div class="card-back"></div>
+                </div>
+                <div class="counter" id="playerCounter">Cartas: 0</div>
+            </div>
+            
+            <div class="vs">VS</div>
+            
+            <div class="pc-area">
+                <h2>PC</h2>
+                <div class="card-slot" id="pcCard">
+                    <div class="card-back"></div>
+                </div>
+                <div class="counter" id="pcCounter">Cartas: 0</div>
+            </div>
+        </div>
+        
+        <button id="newGameBtn">Nueva Partida</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
