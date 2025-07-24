@@ -184,3 +184,31 @@ button:hover {
 .card-suit.bastos {
     color: green;
 }
+.final-result {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Estilo para el mensaje de guerra */
+.war-message {
+    color: #E67E22;
+    font-weight: bold;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

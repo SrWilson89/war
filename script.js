@@ -39,7 +39,7 @@ function shuffleDeck(deck) {
 let gameState = {
     phase: 'initial', // initial, choosing, playing, war, gameOver
     playerPile: [],
-    pcPiles: [],
+    pcPile: [],
     currentPlayerCard: null,
     currentPcCard: null,
     warCards: []
@@ -61,7 +61,7 @@ function initGame() {
     // Crear y barajar la baraja
     const deck = shuffleDeck(createDeck());
     
-    // Dividir en 5 montones (1 para jugador, 4 para PC)
+    // Dividir en 5 montones (1 para jugador, 1 para PC, 3 descartados)
     const pileSize = Math.ceil(deck.length / 5);
     const piles = [];
     
@@ -75,10 +75,11 @@ function initGame() {
     gameState = {
         phase: 'choosing',
         playerPile: [],
-        pcPiles: piles,
+        pcPile: [],
         currentPlayerCard: null,
         currentPcCard: null,
-        warCards: []
+        warCards: [],
+        availablePiles: piles
     };
     
     // Renderizar montones
@@ -92,7 +93,7 @@ function renderPiles() {
     
     if (gameState.phase === 'choosing') {
         // Mostrar los 5 montones para que el jugador elija
-        gameState.pcPiles.forEach((pile, index) => {
+        gameState.availablePiles.forEach((pile, index) => {
             const pileElement = document.createElement('div');
             pileElement.className = 'pile';
             pileElement.dataset.index = index;
@@ -116,7 +117,20 @@ function renderPiles() {
         cardBack.textContent = gameState.playerPile.length;
         
         playerPileElement.appendChild(cardBack);
+        playerPileElement.addEventListener('click', playRound);
         elements.pilesContainer.appendChild(playerPileElement);
+        
+        // Mostrar el montón de la PC (solo contador)
+        const pcPileElement = document.createElement('div');
+        pcPileElement.className = 'pile';
+        pcPileElement.style.marginLeft = '20px';
+        
+        const pcCardBack = document.createElement('div');
+        pcCardBack.className = 'card-back';
+        pcCardBack.textContent = gameState.pcPile.length;
+        
+        pcPileElement.appendChild(pcCardBack);
+        elements.pilesContainer.appendChild(pcPileElement);
     }
 }
 
@@ -124,26 +138,24 @@ function renderPiles() {
 function choosePile(pileIndex) {
     if (gameState.phase !== 'choosing') return;
     
-    // El jugador elige un montón, los otros 4 son para la PC
-    const chosenPile = gameState.pcPiles[pileIndex];
-    const pcPiles = [...gameState.pcPiles];
-    pcPiles.splice(pileIndex, 1);
+    // El jugador elige un montón
+    const playerPile = gameState.availablePiles[pileIndex];
+    const remainingPiles = [...gameState.availablePiles];
+    remainingPiles.splice(pileIndex, 1);
+    
+    // La PC elige un montón aleatorio de los restantes
+    const pcPileIndex = Math.floor(Math.random() * remainingPiles.length);
+    const pcPile = remainingPiles[pcPileIndex];
     
     // Actualizar estado del juego
-    gameState.playerPile = chosenPile;
-    gameState.pcPiles = pcPiles;
+    gameState.playerPile = playerPile;
+    gameState.pcPile = pcPile;
     gameState.phase = 'playing';
     
     // Renderizar cambios
     renderPiles();
     updateCounters();
     elements.statusMessage.textContent = '¡Comienza el juego! Haz clic en tu montón para jugar una ronda.';
-    
-    // Hacer el montón del jugador clickable para jugar rondas
-    const playerPileElement = document.querySelector('.pile');
-    if (playerPileElement) {
-        playerPileElement.addEventListener('click', playRound);
-    }
 }
 
 // Lógica de la Ronda
@@ -151,26 +163,14 @@ function playRound() {
     if (gameState.phase !== 'playing' && gameState.phase !== 'war') return;
     
     // Verificar si hay cartas suficientes
-    if (gameState.playerPile.length === 0 || gameState.pcPiles.flat().length === 0) {
+    if (gameState.playerPile.length === 0 || gameState.pcPile.length === 0) {
         endGame();
         return;
     }
     
     // Sacar cartas
     const playerCard = gameState.playerPile.shift();
-    let pcPileIndex = 0;
-    
-    // Encontrar un montón de la PC que tenga cartas
-    while (pcPileIndex < gameState.pcPiles.length && gameState.pcPiles[pcPileIndex].length === 0) {
-        pcPileIndex++;
-    }
-    
-    if (pcPileIndex >= gameState.pcPiles.length) {
-        endGame();
-        return;
-    }
-    
-    const pcCard = gameState.pcPiles[pcPileIndex].shift();
+    const pcCard = gameState.pcPile.shift();
     
     // Actualizar estado
     gameState.currentPlayerCard = playerCard;
@@ -184,13 +184,15 @@ function playRound() {
 }
 
 function showCards(playerCard, pcCard) {
-    // Mostrar carta del jugador
+    // Limpiar contenedores
     elements.playerCard.innerHTML = '';
+    elements.pcCard.innerHTML = '';
+    
+    // Mostrar carta del jugador
     const playerCardElement = createCardElement(playerCard);
     elements.playerCard.appendChild(playerCardElement);
     
     // Mostrar carta de la PC
-    elements.pcCard.innerHTML = '';
     const pcCardElement = createCardElement(pcCard);
     elements.pcCard.appendChild(pcCardElement);
     
@@ -268,12 +270,10 @@ function playerWinsRound() {
 }
 
 function pcWinsRound() {
-    elements.statusMessage.textContent = 'La PC ganó esta ronda.';
+    elements.statusMessage.textContent = '¡La PC ganó esta ronda!';
     
     // La PC se lleva todas las cartas en juego
-    // Las agregamos a un montón aleatorio de la PC
-    const randomPileIndex = Math.floor(Math.random() * gameState.pcPiles.length);
-    gameState.pcPiles[randomPileIndex].push(...gameState.warCards);
+    gameState.pcPile.push(...gameState.warCards);
     gameState.warCards = [];
     
     updateCounters();
@@ -284,54 +284,94 @@ function pcWinsRound() {
 }
 
 function startWar() {
-    elements.statusMessage.textContent = '¡Guerra! Empate. Se juegan más cartas...';
+    const warMessage = document.createElement('div');
+    warMessage.className = 'war-message';
+    warMessage.textContent = '¡GUERRA! Las cartas tienen el mismo valor.';
+    
+    // Insertar mensaje de guerra
+    elements.statusMessage.innerHTML = '';
+    elements.statusMessage.appendChild(warMessage);
+    
     gameState.phase = 'war';
     
     // Verificar si hay suficientes cartas para la guerra
-    if (gameState.playerPile.length === 0 || gameState.pcPiles.flat().length === 0) {
-        endGame();
+    if (gameState.playerPile.length < 2 || gameState.pcPile.length < 2) {
+        // No hay cartas suficientes para la guerra
+        if (gameState.playerPile.length < 2 && gameState.pcPile.length < 2) {
+            elements.statusMessage.textContent = '¡Doble guerra imposible! Ambos se quedaron sin cartas.';
+            endGame('Empate');
+        } else if (gameState.playerPile.length < 2) {
+            elements.statusMessage.textContent = '¡No tienes cartas para la guerra!';
+            endGame('PC');
+        } else {
+            elements.statusMessage.textContent = '¡La PC no tiene cartas para la guerra!';
+            endGame('Jugador');
+        }
         return;
     }
     
-    // Sacar cartas adicionales para la guerra
+    // Sacar cartas boca abajo para la guerra
+    const playerHiddenCard = gameState.playerPile.shift();
+    const pcHiddenCard = gameState.pcPile.shift();
+    gameState.warCards.push(playerHiddenCard, pcHiddenCard);
+    
+    // Mostrar mensaje de cartas ocultas
     setTimeout(() => {
-        playRound();
-    }, 1500);
+        elements.statusMessage.textContent = 'Cartas ocultas jugadas para la guerra...';
+        
+        // Después de un breve retraso, jugar la siguiente ronda
+        setTimeout(playRound, 1500);
+    }, 2000);
 }
 
 // Actualización del Estado del Juego
 function updateCounters() {
     elements.playerCounter.textContent = `Cartas: ${gameState.playerPile.length}`;
-    
-    const pcTotalCards = gameState.pcPiles.reduce((total, pile) => total + pile.length, 0);
-    elements.pcCounter.textContent = `Cartas: ${pcTotalCards}`;
+    elements.pcCounter.textContent = `Cartas: ${gameState.pcPile.length}`;
 }
 
 function checkGameEnd() {
-    if (gameState.playerPile.length === 0) {
-        endGame('PC');
-    } else if (gameState.pcPiles.flat().length === 0) {
-        endGame('Jugador');
+    if (gameState.playerPile.length === 0 || gameState.pcPile.length === 0) {
+        endGame();
     }
 }
 
 // Fin del Juego
-function endGame(winner = null) {
-    if (!winner) {
-        const playerCards = gameState.playerPile.length;
-        const pcCards = gameState.pcPiles.flat().length;
-        
-        winner = playerCards > pcCards ? 'Jugador' : 'PC';
-        if (playerCards === pcCards) winner = 'Empate';
+function endGame() {
+    let winner;
+    let message;
+    
+    if (gameState.playerPile.length === 0 && gameState.pcPile.length === 0) {
+        winner = 'Empate';
+        message = '¡Juego terminado en empate! Ambos jugadores se quedaron sin cartas al mismo tiempo.';
+    } else if (gameState.playerPile.length === 0) {
+        winner = 'PC';
+        message = '¡Has perdido! La PC se ha quedado con todas las cartas.';
+    } else {
+        winner = 'Jugador';
+        message = '¡Felicidades! Has ganado al quedarte con todas las cartas.';
     }
     
     gameState.phase = 'gameOver';
+    elements.statusMessage.textContent = message;
+    
+    // Mostrar mensaje de resultado final
+    const resultMessage = document.createElement('div');
+    resultMessage.className = 'final-result';
     
     if (winner === 'Empate') {
-        elements.statusMessage.textContent = '¡Juego terminado en empate!';
+        resultMessage.textContent = 'El juego ha terminado en empate.';
+        resultMessage.style.color = '#FFA500'; // Naranja para empate
+    } else if (winner === 'Jugador') {
+        resultMessage.textContent = '¡VICTORIA! ¡Has ganado la partida!';
+        resultMessage.style.color = '#2ECC71'; // Verde para victoria
     } else {
-        elements.statusMessage.textContent = `¡Juego terminado! Ganó el ${winner}.`;
+        resultMessage.textContent = '¡DERROTA! La PC ha ganado la partida.';
+        resultMessage.style.color = '#E74C3C'; // Rojo para derrota
     }
+    
+    // Insertar el mensaje después del status message
+    elements.statusMessage.insertAdjacentElement('afterend', resultMessage);
     
     // Deshabilitar el clic en el montón
     const playerPileElement = document.querySelector('.pile');
